@@ -42,12 +42,58 @@ def test_mark_book_as_read_invalid():
 def test_remove_book():
     collection = BookCollection()
     collection.add_book("The Hobbit", "J.R.R. Tolkien", 1937)
-    result = collection.remove_book("The Hobbit")
-    assert result is True
+    success, message = collection.remove_book("The Hobbit")
+    assert success is True
+    assert "removed successfully" in message
     book = collection.find_book_by_title("The Hobbit")
     assert book is None
 
 def test_remove_book_invalid():
     collection = BookCollection()
-    result = collection.remove_book("Nonexistent Book")
-    assert result is False
+    success, message = collection.remove_book("Nonexistent Book")
+    assert success is False
+    assert "not found" in message
+
+def test_remove_book_case_insensitive():
+    collection = BookCollection()
+    collection.add_book("Dune", "Frank Herbert", 1965)
+    success, message = collection.remove_book("DUNE")
+    assert success is True
+    assert collection.find_book_by_title("Dune") is None
+
+def test_remove_book_whitespace_tolerant():
+    collection = BookCollection()
+    collection.add_book("Foundation", "Isaac Asimov", 1951)
+    success, message = collection.remove_book("  Foundation  ")
+    assert success is True
+    assert collection.find_book_by_title("Foundation") is None
+
+def test_remove_book_with_suggestions():
+    collection = BookCollection()
+    collection.add_book("Dune", "Frank Herbert", 1965)
+    collection.add_book("Dune Messiah", "Frank Herbert", 1969)
+    success, message = collection.remove_book("Messiah")
+    assert success is False
+    assert "Did you mean one of:" in message
+    assert "Dune Messiah" in message
+
+def test_remove_book_empty_title():
+    collection = BookCollection()
+    success, message = collection.remove_book("")
+    assert success is False
+    assert "cannot be empty" in message
+
+def test_find_by_author_whitespace_tolerant():
+    collection = BookCollection()
+    collection.add_book("Foundation", "Isaac Asimov", 1951)
+    collection.add_book("I, Robot", "Isaac Asimov", 1950)
+    books = collection.find_by_author("  Isaac Asimov  ")
+    assert len(books) == 2
+    assert all(b.author == "Isaac Asimov" for b in books)
+
+def test_find_by_author_case_insensitive():
+    collection = BookCollection()
+    collection.add_book("Foundation", "Isaac Asimov", 1951)
+    books = collection.find_by_author("ISAAC ASIMOV")
+    assert len(books) == 1
+    assert books[0].title == "Foundation"
