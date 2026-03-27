@@ -28,6 +28,21 @@ public class BookCollection
         {
             var json = File.ReadAllText(_dataFile);
             _books = JsonSerializer.Deserialize<List<Book>>(json, JsonOptions) ?? [];
+            
+            // Validate and filter out books with invalid years
+            var invalidBooks = _books.Where(b => !YearValidator.IsValidYear(b.Year)).ToList();
+            if (invalidBooks.Count > 0)
+            {
+                Console.WriteLine("Warning: Found books with invalid publication years:");
+                foreach (var book in invalidBooks)
+                {
+                    Console.WriteLine($"  - '{book.Title}': {YearValidator.GetErrorMessage(book.Year)}");
+                }
+                Console.WriteLine("These books will be skipped.\n");
+                
+                _books = _books.Where(b => YearValidator.IsValidYear(b.Year)).ToList();
+                SaveBooks();
+            }
         }
         catch (FileNotFoundException)
         {

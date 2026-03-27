@@ -39,17 +39,32 @@ void HandleAdd()
     Console.Write("Author: ");
     var author = Console.ReadLine()?.Trim() ?? "";
 
-    Console.Write("Year: ");
-    var yearStr = Console.ReadLine()?.Trim() ?? "";
+    int year = PromptForValidYear();
+    
+    collection.AddBook(title, author, year);
+    Console.WriteLine("\nBook added successfully.\n");
+}
 
-    if (int.TryParse(yearStr, out var year))
+int PromptForValidYear()
+{
+    while (true)
     {
-        collection.AddBook(title, author, year);
-        Console.WriteLine("\nBook added successfully.\n");
-    }
-    else
-    {
-        Console.WriteLine($"\nError: '{yearStr}' is not a valid year.\n");
+        Console.Write("Year: ");
+        var yearStr = Console.ReadLine()?.Trim() ?? "";
+
+        if (!int.TryParse(yearStr, out var year))
+        {
+            Console.WriteLine($"Error: '{yearStr}' is not a valid year. Please enter a number.\n");
+            continue;
+        }
+
+        if (!YearValidator.IsValidYear(year))
+        {
+            Console.WriteLine($"Error: {YearValidator.GetErrorMessage(year)}\n");
+            continue;
+        }
+
+        return year;
     }
 }
 
